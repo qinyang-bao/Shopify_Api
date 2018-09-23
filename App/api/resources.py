@@ -462,13 +462,11 @@ class ProductsAPI(Resource):
                 return {"error": "product already exists. please use different name"}, 409
 
         shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
-        if shop.id in shop_ids:
-            return create_product(args['product_name'], shop, args["price"], args["cost"])
-        else:
-            if user.admin:
-                return create_product(args['product_name'], shop, args["price"], args["cost"])
-            else:
+        if shop.id not in shop_ids:
+            if not user.admin:
                 return {"errpor": "the store of the product must be a shop that you own"}
+
+        return create_product(args['product_name'], shop, args["price"], args["cost"])
 
     def put(self):
         args = self.reqparse.parse_args()
@@ -687,10 +685,18 @@ class OrdersAPI(Resource):
         if not user.evaluate_premimum("add order"):
             return {"error": "Premium level too low for this operation"}, 403
 
-        order_id = Orders.create_order(shop)
-        return {"created_order": order_id,
-                "store": args['store'],
-                }
+        def create_order(_shop):
+            order_id = Orders.create_order(_shop)
+            return {"created_order": order_id,
+                    "store": args['store'],
+                    }, 200
+
+        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+        if shop.id not in shop_ids:
+            if not user.admin:
+                return {"error": "the shop of the order must be a shop that you own"}
+
+        return create_order(shop)
 
     def put(self):
         args = self.reqparse.parse_args()
@@ -955,6 +961,7 @@ class LineItemsAPI(Resource):
         if not user.evaluate_premimum("add line item"):
             return {"error": "Premium level too low for this operation"}, 403
 
+        # remember to implement checking for if order and product is valid
         item_id = LineItems.create_line_item(product, order, args['price'], args['quantity'])
         return {"created_line_item": item_id,
                 "product": args['type'],

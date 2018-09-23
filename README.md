@@ -359,9 +359,43 @@ Body: type=<name of the type of product that this line item is of>&order=<id of 
 &price=<unit price of the line item>&quantity<quantity of the line item>
 - parameter "key" is the user key. 
 - argument "type", "order", "price", "quantity" must all be present (what they do is self-explanatory)
+    - argument "type" and "order" must be products & orders from the shops that the user own, unless the user is the
+    administrator (Note: this feature is not implemented yet)
 
-... To be continued ....
+The returned json object would contain the attributes:
+- created_line_item: item id
+- product: product name of the type of product that this line item belongs to
+- order: order id of the order that this line order belongs to
+- unit_price: individual selling price of the type of product in this line item.
+- quantity: quantity of the type of product in this line item
 
+
+#####PUT (update)
+http://127.0.0.1:5000/api/v1/line_items?key=<key>&id=<id>
+Body: type=<name of the type of product that this line item is of>&order=<id of the order that this line item is from>
+&price=<unit price of the line item>&quantity<quantity of the line item>
+- parameter "key" is the user key. 
+- parameter "id" is the id of the line item to update. Administrator may update any item, normal users can only update 
+items from their own shops
+- argument "type", "order", "price", "quantity" may not need to be all present (only the presented ones will be used to update)
+    - argument "type" and "order" must be products & orders from the shops that the user own, unless the user is the administrator 
+  
+The returned json object would contain the attributes:
+- updated_line_item: item id
+- product: product name of the type of product that this line item belongs to
+- order: order id of the order that this line order belongs to
+- unit_price: individual selling price of the type of product in this line item.
+- quantity: quantity of the type of product in this line item
+  
+#####DELETE (delete)
+http://127.0.0.1:5000/api/v1/orders?key=<key>&id=<id>
+- parameter "key" is the user key
+- parameter "id" is the id of the order to delete. Administrator may delete any order, normal users can only delete
+ orders from their own shop(s)
+  
+The returned json object would contain the attributes:
+- deleted_order: order id
+- store: shop name of the shop that has this order
 #### Framework and Library:
 - python flask
 - python flask-sqlalchemy
