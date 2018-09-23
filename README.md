@@ -29,6 +29,7 @@ python 3.6.5 and above
 
 On Linux, simply execute the setup.sh script:
 ```
+$ git clone https://github.com/qinyang-bao/Shopify_Api.git
 $ ./setup.sh
 ```
 
