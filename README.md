@@ -34,7 +34,7 @@ $ ./setup.sh
 
 On Windows:
 ```
-$ git clone https://github.com/qinyang-bao/Shopify_API.git
+$ git clone https://github.com/qinyang-bao/Shopify_Api.git
 $ python3 -m venv venv
 $ venv\Scripts\activate
 $ (venv) pip install -r requirements.txt
