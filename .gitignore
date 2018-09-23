@@ -1,0 +1,13 @@
+**.pyc
+**.log
+**.json
+logs/
+.idea/
+venv/
+__pycache__/
+certs/
+App/__pycache__/
+App/api/__pycahe__/
+App/errors/__pycache__/
+test.py
+.env
