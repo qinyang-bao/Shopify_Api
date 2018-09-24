@@ -75,8 +75,8 @@ has one product "MTE 140" and one single order. There is one line item, which is
 The administrator key is "a12b1e7128dged4" which would give you unlimited access of the api.
 
  
-###users:  
-#####GET (read)  
+####users:  
+######GET (read)  
 http://127.0.0.1:5000/api/v1/users?key={key}&id={id}&list={true}
 - parameter "key" is the user key
 - parameter "id" and "list" are reserved for administrator
