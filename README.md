@@ -75,9 +75,9 @@ has one product "MTE 140" and one single order. There is one line item, which is
 The administrator key is "a12b1e7128dged4" which would give you unlimited access of the api.
 
  
-###users:
-#####GET (read)
-http://127.0.0.1:5000/api/v1/users?key=<key>&id=<id>&list=<true>
+###users:  
+#####GET (read)  
+http://127.0.0.1:5000/api/v1/users?key={key}&id={id}&list={true}
 - parameter "key" is the user key
 - parameter "id" and "list" are reserved for administrator
 - specify "id" to get the user information of the user with this id
@@ -100,8 +100,8 @@ If multiple users information is requested, the returned json would be:
 - users: a list of user object, each would have the above described attributes 
 
 #####POST (create)
-http://127.0.0.1:5000/api/v1/users?key=<key>
-Body: username=<username>&email=<email>&premium_level=<premium_level>
+http://127.0.0.1:5000/api/v1/users?key={key}
+Body: username={username}&email={email}&premium_level={premium_level}
 - parameter "key" is the user key. Only the administrator (identified by key) may create a user
 - argument "username", "email", and "premium_level" must all be present (what they do is self-explanatory)
 
@@ -119,8 +119,8 @@ this design for the PUT and DELETE request as well. This design is the same for 
 
 
 #####PUT (update)
-http://127.0.0.1:5000/api/v1/users?key=<key>&id=<id>
-Body: username=<username>&email=<email>&premium_level=<premium_level>
+http://127.0.0.1:5000/api/v1/users?key={key}&id={id}
+Body: username={username}&email={email}&premium_level={premium_level}
 - parameter "key" is the user key. 
 - parameter "id" is the id of the user to update, only the administrator may use this parameter
 - argument "username", "email", and "premium_level" may not need to be all present, only the present ones will be used to update
@@ -135,7 +135,7 @@ The returned json object would contain the attributes:
 - premium_level: level of premium, access privilege
 
 #####DELETE (delete)
-http://127.0.0.1:5000/api/v1/users?key=<key>&id=<id>
+http://127.0.0.1:5000/api/v1/users?key={key}&id={id}
 - parameter "key" is the user key, only the administrator may use this request
 - parameter "id" is the id of the user to delete
   
