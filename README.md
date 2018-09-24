@@ -57,6 +57,13 @@ $ source venv/bin/activate (or if you are on Windows: venv\Scripts\activate)
 $ (venv) set FLASK_APP=Shopify.py
 $ (venv) flask db upgrade
 ```
+  
+You can start the web server on your localhost by doing:
+```
+$ source venv/bin/activate (or if you are on Windows: venv\Scripts\activate)
+$ (venv) set FLASK_APP=Shopify.py
+$ (venv) flask run
+```
 
 ## Usage:
 I will discuss the usage of this API by going over each resource (users, shops, products, orders, line_items). 

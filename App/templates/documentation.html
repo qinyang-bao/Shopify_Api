@@ -1,0 +1,436 @@
+<h1 id="shopify-api">Shopify API</h1>
+<h2 id="overview-">Overview:</h2>
+<p>This is a simple server-side web API that might be used by E-commerce companies like Shopify.
+It models the following relationship:  </p>
+<ul>
+<li>Users have many shops   </li>
+<li>Shops have many Products  </li>
+<li>Shops have many Orders  </li>
+<li>Products have many Line Items  </li>
+<li>Orders have many Line Items  </li>
+</ul>
+<p>Each resource has full CURD operations implemented. </p>
+<p>Users would have a key, corresponding to its identity. Different key would have different access privilege. There is a
+key for the administrator which has the highest privilege, it may get, create, update, delete any resources. Meanwhile,
+normal user keys may only change resources associated to itself.  </p>
+<p>Line items refer to any service or product added to an order, along with the quantity and price that pertain to them.
+For example, if you buy a carton of milk and two loaf of bread at the grocery store, your bill (the representation of
+your order) will have two line items on it. One for the carton of milk, and the other for two loafs of bread.</p>
+<h4 id="todo-in-progress-">Todo &amp;&amp; In Progress:</h4>
+<ul>
+<li>Deploy with Docker and GKE</li>
+<li>Add pagination for listing resources</li>
+<li>Implement usage limit or other limiting measures for premium business model</li>
+<li>More thorough testing</li>
+<li>Optimize queries and clean up code (use join query)</li>
+</ul>
+<h2 id="installation-">Installation:</h2>
+<p>Make sure you have:</p>
+<pre><code>python <span class="hljs-number">3.6</span><span class="hljs-number">.5</span> <span class="hljs-keyword">and</span> <span class="hljs-keyword">above</span>
+</code></pre><p>On Linux, simply execute the setup.sh script:</p>
+<pre><code>$ git <span class="hljs-keyword">clone</span> <span class="hljs-title">https</span>://github.com/qinyang-bao/Shopify_Api.git
+$ ./setup.sh
+</code></pre><p>On Windows:</p>
+<pre><code><span class="hljs-variable">$ </span>git clone <span class="hljs-symbol">https:</span>/<span class="hljs-regexp">/github.com/qinyang</span>-bao/Shopify_Api.git
+<span class="hljs-variable">$ </span>python3 -m venv venv
+<span class="hljs-variable">$ </span>venv\Scripts\activate
+<span class="hljs-variable">$ </span>(venv) pip install -r requirements.txt
+</code></pre><p>There is a sample.env file that you may want to change the env vars to the ones that suit your need, then rename it to .env.<br>I have also included a sample sqlite database file in the repository that does not require any additional setup. But you
+may also use other databases server(eg. MySQL). To do that, first create a database (remember to change the), then:</p>
+<pre><code>$ source venv/bin/<span class="hljs-built_in">activate</span> (<span class="hljs-keyword">or</span> <span class="hljs-keyword">if</span> you are <span class="hljs-keyword">on</span> Windows: venv\Scripts\<span class="hljs-built_in">activate</span>)
+$ (venv) <span class="hljs-keyword">set</span> FLASK_APP=Shopify.py
+$ (venv) flask db upgrade
+</code></pre><h2 id="usage-">Usage:</h2>
+<p>I will discuss the usage of this API by going over each resource (users, shops, products, orders, line_items).
+You may use curl or the request library of python.  </p>
+<p>All request would follow the following basic structure:<br><a href="http://127.0.0.1:5000/api/v1/">http://127.0.0.1:5000/api/v1/</a><resource_name>?key=<key>&amp;<other_params>=<value><br>Typically, the parameters in the url are for specifying/locating the resource (eg.id, key).<br>Meanwhile, in the body of the request, you would also include arguments which are typically actual information of the resource
+(eg. name, price, owner, etc.) You would only need to use the body for POST and PUT requests.  </p>
+<p>For your convenience, the  sqlite database included (app.db) is populated with some sample data. It contains two users,
+one is the administrator, the other is &quot;Waterloo&quot;. There is one shop &quot;Waterloo bookstore&quot;, owned by &quot;Waterloo&quot;. The shop
+has one product &quot;MTE 140&quot; and one single order. There is one line item, which is two &quot;MTE 140&quot; and it is on the first order.  </p>
+<p>The administrator key is &quot;a12b1e7128dged4&quot; which would give you unlimited access of the api.</p>
+<h4 id="users-">users:</h4>
+<h6 id="get-read-">GET (read)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/users?key={key}&amp;id={id}&amp;list={true}">http://127.0.0.1:5000/api/v1/users?key={key}&amp;id={id}&amp;list={true}</a></p>
+<ul>
+<li>parameter &quot;key&quot; is the user key</li>
+<li>parameter &quot;id&quot; and &quot;list&quot; are reserved for administrator</li>
+<li>specify &quot;id&quot; to get the user information of the user with this id</li>
+<li>set &quot;list&#39; to true to list all users</li>
+<li>if does not use &quot;list&quot; and &quot;id&quot; parameter (what a normal user would do), return the information of
+own user (identified by the key) </li>
+</ul>
+<p>If only one user information is requested, would return a jason object that contains these attributes:</p>
+<ul>
+<li>name: username</li>
+<li>id: user id</li>
+<li>email: user email</li>
+<li>access_key: user key</li>
+<li>premium_level: level of premium, access privilege </li>
+<li>is_admin: a boolean indicating whether the user is the administrator or not</li>
+<li>owned_shops: a list of shops owned by the user. each item in the list is an object that contains attributes: <ul>
+<li>name: name of the store</li>
+<li>id: id of the store</li>
+</ul>
+</li>
+</ul>
+<p>If multiple users information is requested, the returned json would be:</p>
+<ul>
+<li>users: a list of user object, each would have the above described attributes </li>
+</ul>
+<h6 id="post-create-">POST (create)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/users?key={key}">http://127.0.0.1:5000/api/v1/users?key={key}</a><br>Body: username={username}&amp;email={email}&amp;premium_level={premium_level}</p>
+<ul>
+<li>parameter &quot;key&quot; is the user key. Only the administrator (identified by key) may create a user</li>
+<li>argument &quot;username&quot;, &quot;email&quot;, and &quot;premium_level&quot; must all be present (what they do is self-explanatory)</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>created_user: username</li>
+<li>id: user id</li>
+<li>email: user email</li>
+<li>access_key: user key</li>
+<li>premium_level: level of premium, access privilege  </li>
+</ul>
+<p>You may notice that it does not include &quot;owned_shops&quot; as the GET request would return, this is because when a user is
+first created, of course it would not have any owned shops. Also, for the response of POST method, I am trying to make
+it only contain the information about the created resource, excluding information of related resources. I will be keep using
+this design for the PUT and DELETE request as well. This design is the same for all other resources as well.</p>
+<h6 id="put-update-">PUT (update)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/users?key={key}&amp;id={id}">http://127.0.0.1:5000/api/v1/users?key={key}&amp;id={id}</a><br>Body: username={username}&amp;email={email}&amp;premium_level={premium_level}</p>
+<ul>
+<li>parameter &quot;key&quot; is the user key. </li>
+<li>parameter &quot;id&quot; is the id of the user to update, only the administrator may use this parameter</li>
+<li>argument &quot;username&quot;, &quot;email&quot;, and &quot;premium_level&quot; may not need to be all present, only the present ones will be used to update
+the associated attribute<ul>
+<li>Only the administrator may change the premium level of a user  </li>
+</ul>
+</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>updated_user: username</li>
+<li>id: user id</li>
+<li>email: user email</li>
+<li>access_key: user key</li>
+<li>premium_level: level of premium, access privilege</li>
+</ul>
+<h6 id="delete-delete-">DELETE (delete)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/users?key={key}&amp;id={id}">http://127.0.0.1:5000/api/v1/users?key={key}&amp;id={id}</a></p>
+<ul>
+<li>parameter &quot;key&quot; is the user key, only the administrator may use this request</li>
+<li>parameter &quot;id&quot; is the id of the user to delete</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>updated_user: username</li>
+<li>id: user id</li>
+<li>email: user email</li>
+<li>access_key: user key</li>
+<li>premium_level: level of premium, access privilege  </li>
+</ul>
+<h4 id="shops-">Shops:</h4>
+<h6 id="get-read-">GET (read)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/shops?key={key}&amp;id={id}&amp;list={true}">http://127.0.0.1:5000/api/v1/shops?key={key}&amp;id={id}&amp;list={true}</a></p>
+<ul>
+<li>parameter &quot;key&quot; is the user key</li>
+<li>parameter &quot;id&quot; specifies which shop&#39;s information to get. Administrator may use any id, normal user can only use id of
+shops that he/she own</li>
+<li>set parameter &quot;list&quot; to true to obtain a list of shops. Administrator would get all shops, normal user would only get
+shops that he/she own</li>
+</ul>
+<p>If only one shop&#39;s information is requested, would return a jason object that contains these attributes:</p>
+<ul>
+<li>name: shop name</li>
+<li>id: shop id</li>
+<li>owner: user name of the owner of the shop</li>
+<li>products: a list of products in the shop, each item in the list is an object that contains attributes: <ul>
+<li>name: name of the product</li>
+<li>id: id of the id</li>
+</ul>
+</li>
+<li>orders: a list of orders from the shop, each item is the id of the order  </li>
+</ul>
+<p>If multiple shops&#39; information is requested, the returned json would be:</p>
+<ul>
+<li>shops: a list of shop object, each would have the above described attributes </li>
+</ul>
+<h6 id="post-create-">POST (create)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/shops?key={key">http://127.0.0.1:5000/api/v1/shops?key={key</a>)<br>Body: shop_name={username}&amp;owner={username of the user that owns this shop}</p>
+<ul>
+<li>parameter &quot;key&quot; is the user key. </li>
+<li>argument &quot;shop_name&quot; and &quot;owner&quot; must all be present (what they do is self-explanatory)</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>created_shop: shop name</li>
+<li>id: shop id</li>
+<li>owner: user name of the owner of the shop</li>
+</ul>
+<h6 id="put-update-">PUT (update)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/shops?key={key}&amp;id={id}">http://127.0.0.1:5000/api/v1/shops?key={key}&amp;id={id}</a><br>Body: shop_name={username}&amp;owner={username of the user that owns this shop}</p>
+<ul>
+<li>parameter &quot;key&quot; is the user key. </li>
+<li>parameter &quot;id&quot; is the id of the shop to update. Administrator may update any shops, normal users can only update their own shop(s)</li>
+<li>argument &quot;shop_name&quot; and &quot;owner&quot; may not need to be all present, only the present ones will be used to update the associated attribute   </li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>updated_shop: shop name</li>
+<li>id: shop id</li>
+<li>owner: user name of the owner of the shop  </li>
+</ul>
+<h6 id="delete-delete-">DELETE (delete)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/shops?key={key}&amp;id={id}">http://127.0.0.1:5000/api/v1/shops?key={key}&amp;id={id}</a></p>
+<ul>
+<li>parameter &quot;key&quot; is the user key</li>
+<li>parameter &quot;id&quot; is the id of the shop to delete. Administrator may delete any shops, normal users can only delete their own shop(s)</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>deleted_shop: shop name</li>
+<li>id: shop id</li>
+<li>owner: user name of the owner of the shop  </li>
+</ul>
+<h4 id="products">Products</h4>
+<h6 id="get-read-">GET (read)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/products?key={key}&amp;id={id}&amp;shop_id={shop_id}&amp;list={true}">http://127.0.0.1:5000/api/v1/products?key={key}&amp;id={id}&amp;shop_id={shop_id}&amp;list={true}</a></p>
+<ul>
+<li>parameter &quot;key&quot; is the user key</li>
+<li>parameter &quot;id&quot; specifies which product&#39;s information to get. Administrator may use any id, normal user can only use id of
+products from shops that he/she own</li>
+<li>parameter &quot;shop_id&quot; specifies which shop&#39;s products&#39; information to get. Administrator may use any id, normal user can only use the id of
+shops that he/she own</li>
+<li>set parameter &quot;list&quot; to true to obtain a list of products. Administrator would get all products, normal user would only get
+products from shops that he/she own</li>
+</ul>
+<p>If only one product&#39;s information is requested, would return a jason object that contains these attributes:</p>
+<ul>
+<li>name: product name</li>
+<li>id: product id</li>
+<li>store: shop name of the store which has this product </li>
+<li>cost: cost of this product (cost in the sense that price-cost=income)</li>
+<li>line_items: a list of the ids of line items of this product type</li>
+<li>average_price: average selling price of this product, derived from the sold price indicated in each line item<br>(line items may have different selling price) </li>
+<li>total_income: total income obtained from selling this product, derived from cost and line item sold price  </li>
+</ul>
+<p>If multiple products&#39; information is requested, the returned json would be:</p>
+<ul>
+<li>products: a list of product object, each would have the above described attributes </li>
+</ul>
+<h6 id="post-create-">POST (create)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/products?key={key}">http://127.0.0.1:5000/api/v1/products?key={key}</a><br>Body: product_name={username}&amp;store={name of the shop that this product is in}&amp;price={normal price of the product}&amp;cost={cost}</p>
+<ul>
+<li>parameter &quot;key&quot; is the user key. </li>
+<li>argument &quot;product_name&quot;, &quot;store&quot;, &quot;price&quot;, &quot;cost&quot; must all be present (what they do is self-explanatory)<ul>
+<li>The store must be owned by the user, unless the user is the administrator</li>
+</ul>
+</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>created_product: product name</li>
+<li>id: product id</li>
+<li>store: shop name of the shop that this product is in</li>
+<li>price: product normal price</li>
+<li>cost: product cost</li>
+</ul>
+<h6 id="put-update-">PUT (update)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/products?key={key}&amp;id={id}">http://127.0.0.1:5000/api/v1/products?key={key}&amp;id={id}</a><br>Body: product_name={username}&amp;store={name of the shop that this product is in}&amp;price={normal price of the product}&amp;cost={cost}</p>
+<ul>
+<li>parameter &quot;key&quot; is the user key. </li>
+<li>parameter &quot;id&quot; is the id of the product to update. Administrator may update any product, normal users can only update
+products from their own shops</li>
+<li>argument &quot;product_name&quot;, &quot;store&quot;, &quot;price&quot;, &quot;cost&quot; may not need to be all present, only the present ones will be
+used to update the associated attribute<ul>
+<li>argument &quot;store&quot; must be a store that the user owns, unless the user is the administrator </li>
+</ul>
+</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>updated_product: product name</li>
+<li>id: product id</li>
+<li>store: shop name of the shop that this product is in</li>
+<li>price: product normal price</li>
+<li>cost: product cost</li>
+</ul>
+<h6 id="delete-delete-">DELETE (delete)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/products?key={key}&amp;id={id}">http://127.0.0.1:5000/api/v1/products?key={key}&amp;id={id}</a></p>
+<ul>
+<li>parameter &quot;key&quot; is the user key</li>
+<li>parameter &quot;id&quot; is the id of the product to delete. Administrator may delete any products, normal users can only delete
+products from their own shop(s)</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>deleted_product: product name</li>
+<li>id: product id</li>
+<li>store: shop name of the shop that this product is in</li>
+<li>price: product normal price</li>
+<li>cost: product cost </li>
+</ul>
+<h4 id="orders-">Orders:</h4>
+<h6 id="get-read-">GET (read)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/products?key={key}&amp;id={id}&amp;shop_id={shop_id}&amp;list={true}">http://127.0.0.1:5000/api/v1/products?key={key}&amp;id={id}&amp;shop_id={shop_id}&amp;list={true}</a></p>
+<ul>
+<li>parameter &quot;key&quot; is the user key</li>
+<li>parameter &quot;id&quot; specifies which order&#39;s information to get. Administrator may use any id, normal user can only use id of
+orders from shops that he/she own</li>
+<li>parameter &quot;shop_id&quot; specifies which shop&#39;s orders&#39; information to get. Administrator may use any id, normal user can only use the id of
+shops that he/she own</li>
+<li>set parameter &quot;list&quot; to true to obtain a list of order. Administrator would get all order, normal user would only get
+order from shops that he/she own</li>
+</ul>
+<p>If only one order&#39;s information is requested, would return a jason object that contains these attributes:</p>
+<ul>
+<li>id: order id</li>
+<li>store: shop name of the store which has this order </li>
+<li>cost: cost of this product (cost in the sense that price-cost=income)</li>
+<li>line_items: a list of the ids of line items from this bill (order)</li>
+<li>total_price: total price of the items on this order, derived from the selling price of each line item</li>
+<li>total_cost: total cost of the items on this order, derived from the cost of the product type orf each line item</li>
+<li>total_income: total income from this order, derived from total price and total cost</li>
+</ul>
+<p>If multiple orders&#39; information is requested, the returned json would be:</p>
+<ul>
+<li>orders: a list of order object, each would have the above described attributes </li>
+</ul>
+<h6 id="post-create-">POST (create)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/orders?key={key}">http://127.0.0.1:5000/api/v1/orders?key={key}</a><br>Body: store={name of the shop that this order is in}</p>
+<ul>
+<li>parameter &quot;key&quot; is the user key. </li>
+<li>argument &quot;store&quot; must  be present (what it does is self-explanatory)<ul>
+<li>the store must be owned by the user, unless the user is the administrator</li>
+</ul>
+</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>created_order: order id</li>
+<li>store: shop name of the shop that has this order</li>
+</ul>
+<h6 id="put-update-">PUT (update)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/orders?key={key}&amp;id={id}">http://127.0.0.1:5000/api/v1/orders?key={key}&amp;id={id}</a><br>Body: store={name of the shop that this order is in}</p>
+<ul>
+<li>parameter &quot;key&quot; is the user key. </li>
+<li>parameter &quot;id&quot; is the id of the order to update. Administrator may update any order, normal users can only update
+orders from their own shops</li>
+<li>argument &quot;store&quot; may not need to be present but if it is not present, this request would be doing nothing<ul>
+<li>argument &quot;store&quot; must be a store that the user owns, unless the user is the administrator </li>
+</ul>
+</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>updated_order: order id</li>
+<li>store: shop name of the shop that has this order</li>
+</ul>
+<h6 id="delete-delete-">DELETE (delete)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/orders?key={key}&amp;id={id}">http://127.0.0.1:5000/api/v1/orders?key={key}&amp;id={id}</a></p>
+<ul>
+<li>parameter &quot;key&quot; is the user key</li>
+<li>parameter &quot;id&quot; is the id of the order to delete. Administrator may delete any order, normal users can only delete
+orders from their own shop(s)</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>deleted_order: order id</li>
+<li>store: shop name of the shop that has this order</li>
+</ul>
+<h4 id="line_items-">Line_Items:</h4>
+<h6 id="get-read-">GET (read)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/line_items?key={key}&amp;id={id}&amp;product_id={product_id}&amp;order_id={order_id}&amp;shop_id={shop_id}&amp;list={true}">http://127.0.0.1:5000/api/v1/line_items?key={key}&amp;id={id}&amp;product_id={product_id}&amp;order_id={order_id}&amp;shop_id={shop_id}&amp;list={true}</a></p>
+<ul>
+<li>parameter &quot;key&quot; is the user key</li>
+<li>parameter &quot;id&quot; specifies which order&#39;s information to get. Administrator may use any id, normal user can only use id of
+line items from shops that he/she own</li>
+<li>parameter &quot;product_id&quot; specifies which product&#39;s line items&#39; information to get. Administrator may use any id, normal user can only use the id of
+products from shops that he/she own</li>
+<li>parameter &quot;order_id&quot; specifies which order&#39;s line items&#39; information to get. Administrator may use any id, normal user can only use the id of
+orders from shops that he/she own</li>
+<li>parameter &quot;shop_id&quot; specifies which shop&#39;s line items&#39; information to get. Administrator may use any id, normal user can only use the id of
+shops that he/she own</li>
+<li>set parameter &quot;list&quot; to true to obtain a list of line items. Administrator would get all line items, normal user would only get
+line items from shops that he/she own</li>
+</ul>
+<p>If only one line item&#39;s information is requested, would return a jason object that contains these attributes:</p>
+<ul>
+<li>id: order id</li>
+<li>product: product name of the type of product that this line item belongs to</li>
+<li>order: order id of the order that this line order belongs to</li>
+<li>unit_price: individual selling price of the type of product in this line item. Unit price could be different from the
+general price of the product</li>
+<li>quantity: quantity of the type of product in this line item<ul>
+<li>The total price of a line item would be unit_price * quantity --&gt; total price of a product/order is the sum of price
+of each line item from this product/order</li>
+</ul>
+</li>
+</ul>
+<p>If multiple line items&#39; information is requested, the returned json would be:</p>
+<ul>
+<li>line_items: a list of item object, each would have the above described attributes  </li>
+</ul>
+<h6 id="post-create-">POST (create)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/line_items?key={key}">http://127.0.0.1:5000/api/v1/line_items?key={key}</a><br>Body: type={name of the type of product that this line item is of}&amp;order={id of the order that this line item is from}
+&amp;price={unit price of the line item}&amp;quantity{quantity of the line item}</p>
+<ul>
+<li>parameter &quot;key&quot; is the user key. </li>
+<li>argument &quot;type&quot;, &quot;order&quot;, &quot;price&quot;, &quot;quantity&quot; must all be present (what they do is self-explanatory)<ul>
+<li>argument &quot;type&quot; and &quot;order&quot; must be products &amp; orders from the shops that the user own, unless the user is the
+administrator  </li>
+</ul>
+</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>created_line_item: item id</li>
+<li>product: product name of the type of product that this line item belongs to</li>
+<li>order: order id of the order that this line order belongs to</li>
+<li>unit_price: individual selling price of the type of product in this line item.</li>
+<li>quantity: quantity of the type of product in this line item</li>
+</ul>
+<h6 id="put-update-">PUT (update)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/line_items?key={key}&amp;id={id}">http://127.0.0.1:5000/api/v1/line_items?key={key}&amp;id={id}</a><br>Body: type={name of the type of product that this line item is of}&amp;order={id of the order that this line item is from}<br>&amp;price={unit price of the line item}&amp;quantity{quantity of the line item</p>
+<ul>
+<li>parameter &quot;key&quot; is the user key. </li>
+<li>parameter &quot;id&quot; is the id of the line item to update. Administrator may update any item, normal users can only update
+items from their own shops</li>
+<li>argument &quot;type&quot;, &quot;order&quot;, &quot;price&quot;, &quot;quantity&quot; may not need to be all present (only the presented ones will be used to update)<ul>
+<li>argument &quot;type&quot; and &quot;order&quot; must be products &amp; orders from the shops that the user own, unless the user is the administrator </li>
+</ul>
+</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>updated_line_item: item id</li>
+<li>product: product name of the type of product that this line item belongs to</li>
+<li>order: order id of the order that this line order belongs to</li>
+<li>unit_price: individual selling price of the type of product in this line item.</li>
+<li>quantity: quantity of the type of product in this line item</li>
+</ul>
+<h6 id="delete-delete-">DELETE (delete)</h6>
+<p><a href="http://127.0.0.1:5000/api/v1/line_items?key={key}&amp;id={id}">http://127.0.0.1:5000/api/v1/line_items?key={key}&amp;id={id}</a></p>
+<ul>
+<li>parameter &quot;key&quot; is the user key</li>
+<li>parameter &quot;id&quot; is the id of the line item to delete. Administrator may delete any line item, normal users can only delete
+line items from their own shop(s)</li>
+</ul>
+<p>The returned json object would contain the attributes:</p>
+<ul>
+<li>deleted_line_item: item id</li>
+<li>product: product name of the type of product that this line item belongs to</li>
+<li>order: order id of the order that this line order belongs to</li>
+<li>unit_price: individual selling price of the type of product in this line item.</li>
+<li>quantity: quantity of the type of product in this line item  </li>
+</ul>
+<h4 id="framework-and-library-">Framework and Library:</h4>
+<ul>
+<li>python flask</li>
+<li>python flask-sqlalchemy</li>
+<li>python flask-restful</li>
+</ul>
+<h4 id="author-">Author:</h4>
+<ul>
+<li>Qinyang Bao</li>
+</ul>
