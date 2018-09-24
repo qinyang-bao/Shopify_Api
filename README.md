@@ -19,8 +19,16 @@ normal user keys may only change resources associated to itself.
 Line items refer to any service or product added to an order, along with the quantity and price that pertain to them.
 For example, if you buy a carton of milk and two loaf of bread at the grocery store, your bill (the representation of 
 your order) will have two line items on it. One for the carton of milk, and the other for two loafs of bread.
-
-
+  
+  
+#### Todo && In Progress:
+- Deploy with Docker and GKE
+- Add pagination for listing resources
+- Implement usage limit or other limiting measures for premium business model
+- More thorough testing
+- Optimize queries and clean up code (use join query)
+  
+  
 ## Installation:
 Make sure you have:
 ```
@@ -360,8 +368,8 @@ Body: type=<name of the type of product that this line item is of>&order=<id of 
 - parameter "key" is the user key. 
 - argument "type", "order", "price", "quantity" must all be present (what they do is self-explanatory)
     - argument "type" and "order" must be products & orders from the shops that the user own, unless the user is the
-    administrator (Note: this feature is not implemented yet)
-
+    administrator  
+  
 The returned json object would contain the attributes:
 - created_line_item: item id
 - product: product name of the type of product that this line item belongs to
@@ -388,25 +396,26 @@ The returned json object would contain the attributes:
 - quantity: quantity of the type of product in this line item
   
 #####DELETE (delete)
-http://127.0.0.1:5000/api/v1/orders?key=<key>&id=<id>
+http://127.0.0.1:5000/api/v1/line_items?key=<key>&id=<id>
 - parameter "key" is the user key
-- parameter "id" is the id of the order to delete. Administrator may delete any order, normal users can only delete
- orders from their own shop(s)
+- parameter "id" is the id of the line item to delete. Administrator may delete any line item, normal users can only delete
+ line items from their own shop(s)
   
 The returned json object would contain the attributes:
-- deleted_order: order id
-- store: shop name of the shop that has this order
+- deleted_line_item: item id
+- product: product name of the type of product that this line item belongs to
+- order: order id of the order that this line order belongs to
+- unit_price: individual selling price of the type of product in this line item.
+- quantity: quantity of the type of product in this line item  
+  
+  
+  
 #### Framework and Library:
 - python flask
 - python flask-sqlalchemy
 - python flask-restful
 
 
-#### Todo:
-- Add pagination for listing resources
-- Implement usage limit or other limiting measures for premium business model
-- More thorough testing
-- Optimize queries and clean up code (use join query)
 
 #### Author:
 - Qinyang Bao

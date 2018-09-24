@@ -961,14 +961,30 @@ class LineItemsAPI(Resource):
         if not user.evaluate_premimum("add line item"):
             return {"error": "Premium level too low for this operation"}, 403
 
-        # remember to implement checking for if order and product is valid
-        item_id = LineItems.create_line_item(product, order, args['price'], args['quantity'])
-        return {"created_line_item": item_id,
-                "product": args['type'],
-                "order": args['order'],
-                "unit_price": args["price"],
-                "quantity": args["quantity"]
-                }
+        def create_item(_product, _order, _price, _quantity):
+            item_id = LineItems.create_line_item(_product, _order, _price, _quantity)
+
+            return {"created_line_item": item_id,
+                    "product": args['type'],
+                    "order": args['order'],
+                    "unit_price": args["price"],
+                    "quantity": args["quantity"]
+                    }, 200
+
+        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+        products = Products.query.filter(Products.shop_id.in_(shop_ids)).all()
+        orders = Orders.query.filter(Orders.shop_id.in_(shop_ids)).all()
+
+        if order not in orders:
+            if not user.admin:
+                return {"error": "You cannot create a line item with an order that's not from your store"}, 403
+            else:
+                return create_item(product, order, args['price'], args['quantity'])
+        else:
+            if product not in products:
+                return {"error": "You cannot create a line item of a product type that's not from your store"}, 403
+            else:
+                return create_item(product, order, args['price'], args['quantity'])
 
     def put(self):
         args = self.reqparse.parse_args()
