@@ -204,7 +204,7 @@ class ShopsAPI(Resource):
             if user.admin:
                 shops = Shops.query.all()
             else:
-                shops = Shops.query.filter_by(user_id=user.id).all()
+                shops = user.owned_shops()
             response = {"shops": []}
             for s in shops:
                 response["shops"].append(get_shop(s))
@@ -361,7 +361,7 @@ class ProductsAPI(Resource):
         if count > 1:
             return {'error': "ambiguous request, you can only use one of id, shop id, or list"}, 400
         if count == 0:
-            return {'error': "you must specify which shop(s) you want to get"}, 400
+            return {'error': "you must specify which product(s) you want to get"}, 400
 
         # returns a json object that contains all pertained information of the product
         def get_product(p):
@@ -394,9 +394,9 @@ class ProductsAPI(Resource):
                 return get_product(product), 200
 
             else:
-                shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+                shop_ids = user.owned_shop_ids()
                 if product.shop_id not in shop_ids:
-                    return {'error': "you cannot access products that are not in your shops"}
+                    return {'error': "you cannot access products that are not in your shops"}, 403
                 return get_product(product), 200
 
         if args['shop_id']:
@@ -411,9 +411,9 @@ class ProductsAPI(Resource):
                 return response, 200
 
             else:
-                shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+                shop_ids = user.owned_shop_ids()
                 if args["shop_id"] not in shop_ids:
-                    return {'error': "you cannot access products that are not in your shops"}
+                    return {'error': "you cannot access products that are not in your shops"}, 403
                 for p in products:
                     response["products"].append(get_product(p))
                 return response, 200
@@ -426,8 +426,7 @@ class ProductsAPI(Resource):
                     response["products"].append(get_product(p))
                 return response, 200
             else:
-                shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
-                products = Products.query.filter(Products.shop_id in shop_ids).all()
+                products = user.owned_products()
                 for p in products:
                     response["products"].append(get_product(p))
                 return response, 200
@@ -461,10 +460,10 @@ class ProductsAPI(Resource):
             else:
                 return {"error": "product already exists. please use different name"}, 409
 
-        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+        shop_ids = user.owned_shop_ids()
         if shop.id not in shop_ids:
             if not user.admin:
-                return {"errpor": "the store of the product must be a shop that you own"}
+                return {"errpor": "the store of the product must be a shop that you own"}, 403
 
         return create_product(args['product_name'], shop, args["price"], args["cost"])
 
@@ -508,7 +507,7 @@ class ProductsAPI(Resource):
 
         product = Products.query.filter_by(id=args['id']).first()
         store = Shops.query.filter_by(shop_name=args['store']).first()
-        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+        shop_ids = user.owned_shop_ids()
         if product is not None:
             if product.shop_id not in shop_ids:
                 if not user.admin:
@@ -550,7 +549,7 @@ class ProductsAPI(Resource):
                    }
 
         product = Products.query.filter_by(id=args['id']).first()
-        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+        shop_ids = user.owned_shop_ids()
         if product is not None:
             if product.shop_id not in shop_ids:
                 if not user.admin:
@@ -597,7 +596,7 @@ class OrdersAPI(Resource):
         if count > 1:
             return {'error': "ambiguous request, you can only use one of id, shop id, or list"}, 400
         if count == 0:
-            return {'error': "you must specify which shop(s) you want to get"}, 400
+            return {'error': "you must specify which order(s) you want to get"}, 400
 
         # returns a json object that contains all pertained information of the product
         def get_order(o):
@@ -630,9 +629,9 @@ class OrdersAPI(Resource):
                 return get_order(order), 200
 
             else:
-                shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+                shop_ids = user.owned_shop_ids()
                 if order.shop_id not in shop_ids:
-                    return {'error': "you cannot access orders that are not from your shops"}
+                    return {'error': "you cannot access orders that are not from your shops"}, 403
                 return get_order(order), 200
 
         if args['shop_id']:
@@ -647,9 +646,9 @@ class OrdersAPI(Resource):
                 return response, 200
 
             else:
-                shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+                shop_ids = user.owned_shop_ids()
                 if args["shop_id"] not in shop_ids:
-                    return {'error': "you cannot access products that are not in your shops"}
+                    return {'error': "you cannot access products that are not in your shops"}, 403
                 for o in orders:
                     response["orders"].append(get_order(o))
                 return response, 200
@@ -662,8 +661,8 @@ class OrdersAPI(Resource):
                     response["orders"].append(get_order(o))
                 return response, 200
             else:
-                shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
-                orders = Orders.query.filter(Orders.shop_id in shop_ids).all()
+                shop_ids = user.owned_shop_ids()
+                orders = Orders.query.filter(Orders.shop_id.in_(shop_ids)).all()
                 for o in orders:
                     response["orders"].append(get_order(o))
                 return response, 200
@@ -691,10 +690,10 @@ class OrdersAPI(Resource):
                     "store": args['store'],
                     }, 200
 
-        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+        shop_ids = user.owned_shop_ids()
         if shop.id not in shop_ids:
             if not user.admin:
-                return {"error": "the shop of the order must be a shop that you own"}
+                return {"error": "the shop of the order must be a shop that you own"}, 403
 
         return create_order(shop)
 
@@ -722,7 +721,7 @@ class OrdersAPI(Resource):
 
         order = Orders.query.filter_by(id=args['id']).first()
         store = Shops.query.filter_by(shop_name=args['store']).first()
-        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+        shop_ids = user.owned_shop_ids()
         if order is not None:
             if order.shop_id not in shop_ids:
                 if not user.admin:
@@ -761,7 +760,7 @@ class OrdersAPI(Resource):
                    }
 
         order = Orders.query.filter_by(id=args['id']).first()
-        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
+        shop_ids = user.owned_shop_ids()
         if order is not None:
             if order.shop_id not in shop_ids:
                 if not user.admin:
@@ -821,7 +820,7 @@ class LineItemsAPI(Resource):
             return {'error': "ambiguous request, you can only use one of id, product id, order id, shop id, or list"}\
                 , 400
         if count == 0:
-            return {'error': "you must specify which shop(s) you want to get"}, 400
+            return {'error': "you must specify which line item(s) you want to get"}, 400
 
         # returns a json object that contains all pertained information of the line item
         def get_item(i):
@@ -840,16 +839,8 @@ class LineItemsAPI(Resource):
             return data
 
         # get all valid order ids/ product ids that the line item could belong to for the user
-        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
-        order_ids = []
-        product_ids = []
-        for shop_id in shop_ids:
-            orders = Orders.query.filter_by(shop_id=shop_id).all()
-            products = Products.query.filter_by(shop_id=shop_id).all()
-            for o in orders:
-                order_ids.append(o.id)
-            for p in products:
-                product_ids.append(p.id)
+        order_ids = user.owned_order_ids()
+        product_ids = user.owned_product_ids()
 
         if args['id']:
             item = LineItems.query.filter_by(id=args['id']).first()
@@ -859,19 +850,19 @@ class LineItemsAPI(Resource):
             if not user.admin:
                 # if the order id of the line item is not one of the order ids that belong to this user
                 if item.order_id not in order_ids:
-                    return {'error': "you cannot access line items that are not from your shops"}
+                    return {'error': "you cannot access line items that are not from your shops"}, 403
 
             return get_item(item), 200
 
         if args['order_id']:
             items = LineItems.query.filter_by(order_id=args['order_id']).all()
             if len(items) == 0:
-                return {'error': "no line items in this order"}, 404
+                return {'error': "no line items in this order or this order does not exist"}, 404
             response = {"line_items": []}
 
             if not user.admin:
                 if args["order_id"] not in order_ids:
-                    return {'error': "you cannot access line items that are not from your shops"}
+                    return {'error': "you cannot access line items that are not from your shops"}, 403
                 items = LineItems.query.filter(LineItems.order_id.in_(order_ids)).all()
 
             for i in items:
@@ -881,12 +872,12 @@ class LineItemsAPI(Resource):
         if args['product_id']:
             items = LineItems.query.filter_by(product_id=args['product_id']).all()
             if len(items) == 0:
-                return {'error': "no line items for this product"}, 404
+                return {'error': "no line items for this product or this product does not exist"}, 404
             response = {"line_items": []}
 
             if not user.admin:
                 if args["product_id"] not in product_ids:
-                    return {'error': "you cannot access line items that are not from your shops"}
+                    return {'error': "you cannot access line items that are not from your shops"}, 403
                 items = LineItems.query.filter(LineItems.product_id.in_(product_ids)).all()
 
             for i in items:
@@ -894,19 +885,11 @@ class LineItemsAPI(Resource):
             return response, 200
 
         if args['shop_id']:
-            _products = Products.query.filter_by(shop_id=args['shop_id']).all()
-            _orders = Orders.query.filter_by(shop_id=args['shop_id']).all()
-            p_items = LineItems.query.filter(LineItems.type in _products)
-            items = LineItems.query.filter(LineItems.bill in _orders)
-
-            for i in p_items:
-                is_duplicated = False
-                for _i in items:
-                    if i.id == _i.id:
-                        is_duplicated = True
-                        break
-                if not is_duplicated:
-                    items.append(i)
+            shop = Shops.query.filter_by(id=args['shop_id']).first()
+            if shop is None:
+                return {'error': "shop with this id does not exist"}, 404
+            shop_ids = user.owned_shop_ids()
+            items = shop.owned_items()
 
             if len(items) == 0:
                 return {'error': "no line items in this shop"}, 404
@@ -914,7 +897,7 @@ class LineItemsAPI(Resource):
             response = {"line_items": []}
             if not user.admin:
                 if args["shop_id"] not in shop_ids:
-                    return {'error': "you cannot access products that are not in your shops"}
+                    return {'error': "you cannot access products that are not in your shops"}, 403
 
             for i in items:
                 response["orders"].append(get_item(i))
@@ -925,16 +908,7 @@ class LineItemsAPI(Resource):
 
             response = {"line_items": []}
             if not user.admin:
-                p_items = LineItems.query.filter(LineItems.product_id.in_(product_ids)).all()
-                items = LineItems.query.filter(LineItems.order_id.in_(order_ids)).all()
-                for i in p_items:
-                    is_duplicated = False
-                    for _i in items:
-                        if i.id == _i.id:
-                            is_duplicated = True
-                            break
-                    if not is_duplicated:
-                        items.append(i)
+                items = user.owned_items()
 
             for i in items:
                 response["line_items"].append(get_item(i))
@@ -971,9 +945,8 @@ class LineItemsAPI(Resource):
                     "quantity": args["quantity"]
                     }, 200
 
-        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
-        products = Products.query.filter(Products.shop_id.in_(shop_ids)).all()
-        orders = Orders.query.filter(Orders.shop_id.in_(shop_ids)).all()
+        products = user.owned_products()
+        orders = user.owned_orders()
 
         if order not in orders:
             if not user.admin:
@@ -1025,9 +998,8 @@ class LineItemsAPI(Resource):
         product = Products.query.filter_by(product_name=args['type']).first()
         order = Orders.query.filter_by(id=args['order']).first()
 
-        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
-        products = Products.query.filter(Products.shop_id.in_(shop_ids)).all()
-        orders = Orders.query.filter(Orders.shop_id.in_(shop_ids)).all()
+        products = user.owned_products()
+        orders = user.owned_orders()
 
         if item is not None:
             if item.type not in products:
@@ -1074,8 +1046,7 @@ class LineItemsAPI(Resource):
                    }
 
         item = LineItems.query.filter_by(id=args['id']).first()
-        shop_ids = [shop.id for shop in Shops.query.filter_by(user_id=user.id).all()]
-        products = Products.query.filter(Products.shop_id.in_(shop_ids)).all()
+        products = user.owned_products()
 
         if item is not None:
             if item.type not in products:

@@ -25,6 +25,46 @@ class Users(db.Model):
     def evaluate_premimum(self, action=""):
         return True
 
+    def owned_shops(self):
+        return Shops.query.filter_by(user_id=self.id).all()
+
+    def owned_shop_ids(self):
+        return [shop.id for shop in self.owned_shops()]
+
+    def owned_products(self):
+        shops_ids = self.owned_shop_ids()
+        return Products.query.filter(Products.shop_id.in_(shops_ids))
+
+    def owned_product_ids(self):
+        return [product.id for product in self.owned_products()]
+
+    def owned_orders(self):
+        shops_ids = self.owned_shop_ids()
+        return Orders.query.filter(Orders.shop_id.in_(shops_ids))
+
+    def owned_order_ids(self):
+        return [product.id for product in self.owned_orders()]
+
+    def owned_items(self):
+        product_ids = self.owned_product_ids()
+        order_ids = self.owned_order_ids()
+        p_items = LineItems.query.filter(LineItems.product_id.in_(product_ids))
+        items = LineItems.query.filter(LineItems.order_id.in_(order_ids))
+
+        for i in p_items:
+            is_duplicated = False
+            for _i in items:
+                if i.id == _i.id:
+                    is_duplicated = True
+                    break
+            if not is_duplicated:
+                items.append(i)
+
+        return items
+
+    def owned_item_ids(self):
+        return [item.id for item in self.owned_items()]
+
     @staticmethod
     def create_user(name, email, premium_level=1, admin=False, key=None):
         user = Users.query.filter(Users.user_name == name or Users.email == email).first()
@@ -56,6 +96,26 @@ class Shops(db.Model):
 
     def __repr__(self):
         return '<Shop {}>'.format(self.shop_name)
+
+    def owned_items(self):
+        product_ids = [product.id for product in Products.query.filter_by(shop_id=self.id).all()]
+        order_ids = [order.id for order in Orders.query.filter_by(shop_id=self.id).all()]
+        p_items = LineItems.query.filter(LineItems.product_id.in_(product_ids))
+        items = LineItems.query.filter(LineItems.order_id.in_(order_ids))
+
+        for i in p_items:
+            is_duplicated = False
+            for _i in items:
+                if i.id == _i.id:
+                    is_duplicated = True
+                    break
+            if not is_duplicated:
+                items.append(i)
+
+        return items
+
+    def owned_item_ids(self):
+        return [item.id for item in self.owned_items()]
 
     @staticmethod
     def create_shop(name, owner):
