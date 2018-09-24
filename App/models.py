@@ -33,14 +33,14 @@ class Users(db.Model):
 
     def owned_products(self):
         shops_ids = self.owned_shop_ids()
-        return Products.query.filter(Products.shop_id.in_(shops_ids))
+        return Products.query.filter(Products.shop_id.in_(shops_ids)).all()
 
     def owned_product_ids(self):
         return [product.id for product in self.owned_products()]
 
     def owned_orders(self):
         shops_ids = self.owned_shop_ids()
-        return Orders.query.filter(Orders.shop_id.in_(shops_ids))
+        return Orders.query.filter(Orders.shop_id.in_(shops_ids)).all()
 
     def owned_order_ids(self):
         return [product.id for product in self.owned_orders()]
@@ -48,8 +48,8 @@ class Users(db.Model):
     def owned_items(self):
         product_ids = self.owned_product_ids()
         order_ids = self.owned_order_ids()
-        p_items = LineItems.query.filter(LineItems.product_id.in_(product_ids))
-        items = LineItems.query.filter(LineItems.order_id.in_(order_ids))
+        p_items = LineItems.query.filter(LineItems.product_id.in_(product_ids)).all()
+        items = LineItems.query.filter(LineItems.order_id.in_(order_ids)).all()
 
         for i in p_items:
             is_duplicated = False
@@ -100,8 +100,8 @@ class Shops(db.Model):
     def owned_items(self):
         product_ids = [product.id for product in Products.query.filter_by(shop_id=self.id).all()]
         order_ids = [order.id for order in Orders.query.filter_by(shop_id=self.id).all()]
-        p_items = LineItems.query.filter(LineItems.product_id.in_(product_ids))
-        items = LineItems.query.filter(LineItems.order_id.in_(order_ids))
+        p_items = LineItems.query.filter(LineItems.product_id.in_(product_ids)).all()
+        items = LineItems.query.filter(LineItems.order_id.in_(order_ids)).all()
 
         for i in p_items:
             is_duplicated = False

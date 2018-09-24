@@ -900,7 +900,7 @@ class LineItemsAPI(Resource):
                     return {'error': "you cannot access products that are not in your shops"}, 403
 
             for i in items:
-                response["orders"].append(get_item(i))
+                response["line_items"].append(get_item(i))
             return response, 200
 
         if args['list']:
