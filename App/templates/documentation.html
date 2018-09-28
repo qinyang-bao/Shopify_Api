@@ -18,7 +18,6 @@ For example, if you buy a carton of milk and two loaf of bread at the grocery st
 your order) will have two line items on it. One for the carton of milk, and the other for two loafs of bread.</p>
 <h4 id="todo-in-progress-">Todo &amp;&amp; In Progress:</h4>
 <ul>
-<li>Deploy with Docker and GKE</li>
 <li>Add pagination for listing resources</li>
 <li>Implement usage limit or other limiting measures for premium business model</li>
 <li>More thorough testing</li>
@@ -43,8 +42,10 @@ $ (venv) flask db upgrade
 </code></pre><h2 id="usage-">Usage:</h2>
 <p>I will discuss the usage of this API by going over each resource (users, shops, products, orders, line_items).
 You may use curl or the request library of python.  </p>
-<p>All request would follow the following basic structure:<br><a href="http://127.0.0.1:5000/api/v1/">http://127.0.0.1:5000/api/v1/</a><resource_name>?key=<key>&amp;<other_params>=<value><br>Typically, the parameters in the url are for specifying/locating the resource (eg.id, key).<br>Meanwhile, in the body of the request, you would also include arguments which are typically actual information of the resource
+<p>All request would follow the following basic structure:<br><a href="http://127.0.0.1:5000/api/v1/{resource_name}?key={key}&{other_params}={value}">http://127.0.0.1:5000/api/v1/{resource_name}?key={key}&{other_params}={value}</a><br>Typically, the parameters in the url are for specifying/locating the resource (eg.id, key).<br>Meanwhile, in the body of the request, you would also include arguments which are typically actual information of the resource
 (eg. name, price, owner, etc.) You would only need to use the body for POST and PUT requests.  </p>
+<p>Note, if you are using the deployed version instead of running on your localhost, remember to use the appropriate url, eg.  <br>
+    <a href="http://35.232.76.81/api/v1/{resource_name}?key={key}&{other_params}={value}">http://35.232.76.81/api/v1/{resource_name}?key={key}&{other_params}={value} </a></p>
 <p>For your convenience, the  sqlite database included (app.db) is populated with some sample data. It contains two users,
 one is the administrator, the other is &quot;Waterloo&quot;. There is one shop &quot;Waterloo bookstore&quot;, owned by &quot;Waterloo&quot;. The shop
 has one product &quot;MTE 140&quot; and one single order. There is one line item, which is two &quot;MTE 140&quot; and it is on the first order.  </p>
