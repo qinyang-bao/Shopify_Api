@@ -22,11 +22,11 @@ normal user keys may only change resources associated to itself.
   
 Line items refer to any service or product added to an order, along with the quantity and price that pertain to them.
 For example, if you buy a carton of milk and two loaf of bread at the grocery store, your bill (the representation of 
-your order) will have two line items on it. One for the carton of milk, and the other for two loafs of bread.
-  
+your order) will have two line items on it. One for the carton of milk, and the other for two loafs of bread.  
+
+I have deployed the api using GKE and docker. You can play around with itt at the address http://35.232.76.81/
   
 #### Todo && In Progress:
-* Deploy with Docker and GKE
 * Add pagination for listing resources
 * Implement usage limit or other limiting measures for premium business model
 * More thorough testing
