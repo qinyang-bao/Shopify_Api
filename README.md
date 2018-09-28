@@ -74,10 +74,12 @@ I will discuss the usage of this API by going over each resource (users, shops, 
 You may use curl or the request library of python.  
 
 All request would follow the following basic structure:  
-http://127.0.0.1:5000/api/v1/<resource_name>?key=<key>&<other_params>=<value>  
+http://35.232.76.81/api/v1/<resource_name>?key=<key>&<other_params>=<value>  
 Typically, the parameters in the url are for specifying/locating the resource (eg.id, key).  
 Meanwhile, in the body of the request, you would also include arguments which are typically actual information of the resource
 (eg. name, price, owner, etc.) You would only need to use the body for POST and PUT requests.  
+Note, use the appropriate url if you are running on your localhost. Eg:  
+http://127.0.0.1:5000/api/v1/<resource_name>?key=<key>&<other_params>=<value>  
 
 For your convenience, the  sqlite database included (app.db) is populated with some sample data. It contains two users,
 one is the administrator, the other is "Waterloo". There is one shop "Waterloo bookstore", owned by "Waterloo". The shop
@@ -88,7 +90,7 @@ The administrator key is "a12b1e7128dged4" which would give you unlimited access
  
 #### users:
 ###### GET (read)
-http://127.0.0.1:5000/api/v1/users?key={key}&id={id}&list={true}
+http://35.232.76.81/api/v1/users?key={key}&id={id}&list={true}
 * parameter "key" is the user key
 * parameter "id" and "list" are reserved for administrator
 * specify "id" to get the user information of the user with this id
@@ -111,7 +113,7 @@ If multiple users information is requested, the returned json would be:
 * users: a list of user object, each would have the above described attributes 
 
 ###### POST (create)
-http://127.0.0.1:5000/api/v1/users?key={key}  
+http://35.232.76.81/api/v1/users?key={key}  
 Body: username={username}&email={email}&premium_level={premium_level}
 * parameter "key" is the user key. Only the administrator (identified by key) may create a user
 * argument "username", "email", and "premium_level" must all be present (what they do is self-explanatory)
@@ -130,7 +132,7 @@ this design for the PUT and DELETE request as well. This design is the same for 
 
 
 ###### PUT (update)
-http://127.0.0.1:5000/api/v1/users?key={key}&id={id}  
+http://35.232.76.81/api/v1/users?key={key}&id={id}  
 Body: username={username}&email={email}&premium_level={premium_level}
 * parameter "key" is the user key. 
 * parameter "id" is the id of the user to update, only the administrator may use this parameter
@@ -146,7 +148,7 @@ The returned json object would contain the attributes:
 * premium_level: level of premium, access privilege
 
 ###### DELETE (delete)
-http://127.0.0.1:5000/api/v1/users?key={key}&id={id}
+http://35.232.76.81/api/v1/users?key={key}&id={id}
 * parameter "key" is the user key, only the administrator may use this request
 * parameter "id" is the id of the user to delete
   
@@ -161,7 +163,7 @@ The returned json object would contain the attributes:
  
 #### Shops:
 ###### GET (read)
-http://127.0.0.1:5000/api/v1/shops?key={key}&id={id}&list={true}
+http://35.232.76.81/api/v1/shops?key={key}&id={id}&list={true}
 * parameter "key" is the user key
 * parameter "id" specifies which shop's information to get. Administrator may use any id, normal user can only use id of
 shops that he/she own
@@ -181,7 +183,7 @@ If multiple shops' information is requested, the returned json would be:
 * shops: a list of shop object, each would have the above described attributes 
 
 ###### POST (create)
-http://127.0.0.1:5000/api/v1/shops?key={key)  
+http://35.232.76.81/api/v1/shops?key={key)  
 Body: shop_name={username}&owner={username of the user that owns this shop}
 * parameter "key" is the user key. 
 * argument "shop_name" and "owner" must all be present (what they do is self-explanatory)
@@ -192,7 +194,7 @@ The returned json object would contain the attributes:
 * owner: user name of the owner of the shop
 
 ###### PUT (update)
-http://127.0.0.1:5000/api/v1/shops?key={key}&id={id}  
+http://35.232.76.81/api/v1/shops?key={key}&id={id}  
 Body: shop_name={username}&owner={username of the user that owns this shop}
 * parameter "key" is the user key. 
 * parameter "id" is the id of the shop to update. Administrator may update any shops, normal users can only update their own shop(s)
@@ -204,7 +206,7 @@ The returned json object would contain the attributes:
 * owner: user name of the owner of the shop  
   
 ###### DELETE (delete)
-http://127.0.0.1:5000/api/v1/shops?key={key}&id={id}
+http://35.232.76.81/api/v1/shops?key={key}&id={id}
 * parameter "key" is the user key
 * parameter "id" is the id of the shop to delete. Administrator may delete any shops, normal users can only delete their own shop(s)
   
@@ -217,7 +219,7 @@ The returned json object would contain the attributes:
 
 #### Products
 ###### GET (read)
-http://127.0.0.1:5000/api/v1/products?key={key}&id={id}&shop_id={shop_id}&list={true}
+http://35.232.76.81/api/v1/products?key={key}&id={id}&shop_id={shop_id}&list={true}
 * parameter "key" is the user key
 * parameter "id" specifies which product's information to get. Administrator may use any id, normal user can only use id of
 products from shops that he/she own
@@ -240,7 +242,7 @@ If multiple products' information is requested, the returned json would be:
 * products: a list of product object, each would have the above described attributes 
 
 ###### POST (create)
-http://127.0.0.1:5000/api/v1/products?key={key}  
+http://35.232.76.81/api/v1/products?key={key}  
 Body: product_name={username}&store={name of the shop that this product is in}&price={normal price of the product}&cost={cost}
 * parameter "key" is the user key. 
 * argument "product_name", "store", "price", "cost" must all be present (what they do is self-explanatory)
@@ -254,7 +256,7 @@ The returned json object would contain the attributes:
 * cost: product cost
 
 ###### PUT (update)
-http://127.0.0.1:5000/api/v1/products?key={key}&id={id}  
+http://35.232.76.81/api/v1/products?key={key}&id={id}  
 Body: product_name={username}&store={name of the shop that this product is in}&price={normal price of the product}&cost={cost}
 * parameter "key" is the user key. 
 * parameter "id" is the id of the product to update. Administrator may update any product, normal users can only update 
@@ -271,7 +273,7 @@ The returned json object would contain the attributes:
 * cost: product cost
   
 ###### DELETE (delete)
-http://127.0.0.1:5000/api/v1/products?key={key}&id={id}
+http://35.232.76.81/api/v1/products?key={key}&id={id}
 * parameter "key" is the user key
 * parameter "id" is the id of the product to delete. Administrator may delete any products, normal users can only delete
  products from their own shop(s)
@@ -287,7 +289,7 @@ The returned json object would contain the attributes:
 
 #### Orders:
 ###### GET (read)
-http://127.0.0.1:5000/api/v1/products?key={key}&id={id}&shop_id={shop_id}&list={true}
+http://35.232.76.81/api/v1/products?key={key}&id={id}&shop_id={shop_id}&list={true}
 * parameter "key" is the user key
 * parameter "id" specifies which order's information to get. Administrator may use any id, normal user can only use id of
 orders from shops that he/she own
@@ -309,7 +311,7 @@ If multiple orders' information is requested, the returned json would be:
 * orders: a list of order object, each would have the above described attributes 
 
 ###### POST (create)
-http://127.0.0.1:5000/api/v1/orders?key={key}  
+http://35.232.76.81/api/v1/orders?key={key}  
 Body: store={name of the shop that this order is in}
 * parameter "key" is the user key. 
 * argument "store" must  be present (what it does is self-explanatory)
@@ -321,7 +323,7 @@ The returned json object would contain the attributes:
 
 
 ###### PUT (update)
-http://127.0.0.1:5000/api/v1/orders?key={key}&id={id}  
+http://35.232.76.81/api/v1/orders?key={key}&id={id}  
 Body: store={name of the shop that this order is in}
 * parameter "key" is the user key. 
 * parameter "id" is the id of the order to update. Administrator may update any order, normal users can only update 
@@ -334,7 +336,7 @@ The returned json object would contain the attributes:
 * store: shop name of the shop that has this order
   
 ###### DELETE (delete)
-http://127.0.0.1:5000/api/v1/orders?key={key}&id={id}
+http://35.232.76.81/api/v1/orders?key={key}&id={id}
 * parameter "key" is the user key
 * parameter "id" is the id of the order to delete. Administrator may delete any order, normal users can only delete
  orders from their own shop(s)
@@ -346,7 +348,7 @@ The returned json object would contain the attributes:
   
 #### Line_Items:
 ###### GET (read)
-http://127.0.0.1:5000/api/v1/line_items?key={key}&id={id}&product_id={product_id}&order_id={order_id}&shop_id={shop_id}&list={true}
+http://35.232.76.81/api/v1/line_items?key={key}&id={id}&product_id={product_id}&order_id={order_id}&shop_id={shop_id}&list={true}
 * parameter "key" is the user key
 * parameter "id" specifies which order's information to get. Administrator may use any id, normal user can only use id of
 line items from shops that he/she own
@@ -373,7 +375,7 @@ If multiple line items' information is requested, the returned json would be:
 * line_items: a list of item object, each would have the above described attributes  
 
 ###### POST (create)
-http://127.0.0.1:5000/api/v1/line_items?key={key}  
+http://35.232.76.81/api/v1/line_items?key={key}  
 Body: type={name of the type of product that this line item is of}&order={id of the order that this line item is from}
 &price={unit price of the line item}&quantity{quantity of the line item}
 * parameter "key" is the user key. 
@@ -390,7 +392,7 @@ The returned json object would contain the attributes:
 
 
 ###### PUT (update)
-http://127.0.0.1:5000/api/v1/line_items?key={key}&id={id}  
+http://35.232.76.81/api/v1/line_items?key={key}&id={id}  
 Body: type={name of the type of product that this line item is of}&order={id of the order that this line item is from}  
 &price={unit price of the line item}&quantity{quantity of the line item
 * parameter "key" is the user key. 
@@ -407,7 +409,7 @@ The returned json object would contain the attributes:
 * quantity: quantity of the type of product in this line item
   
 ###### DELETE (delete)
-http://127.0.0.1:5000/api/v1/line_items?key={key}&id={id}
+http://35.232.76.81/api/v1/line_items?key={key}&id={id}
 * parameter "key" is the user key
 * parameter "id" is the id of the line item to delete. Administrator may delete any line item, normal users can only delete
  line items from their own shop(s)
