@@ -24,7 +24,7 @@ Line items refer to any service or product added to an order, along with the qua
 For example, if you buy a carton of milk and two loaf of bread at the grocery store, your bill (the representation of 
 your order) will have two line items on it. One for the carton of milk, and the other for two loafs of bread.  
 
-I have deployed the api using GKE and docker. You can play around with itt at the address http://35.232.76.81/
+You can easily deploy this api using docker as I have included a Docker file.
   
 #### Todo && In Progress:
 * Add pagination for listing resources
