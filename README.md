@@ -5,7 +5,7 @@
 This is a simple server-side web API that might be used by E-commerce companies like Shopify.
 Built for Shopify developer challenge 2018 Winter Term. The original challenge can be found here:  
 https://docs.google.com/document/d/1YYDRf_CgQRryf5lZdkZ2o3Hm3erFSaISL1L1s8kLqsI/edit
-  
+(The project is merely for demonstration, application to real life is limited)
 
 I have made some extensions to it (mainly the user system) so now it models the following relationship:  
 * Users have many shops   
